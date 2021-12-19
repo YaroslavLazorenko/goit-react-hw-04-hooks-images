@@ -26,7 +26,7 @@ class App extends Component {
 
     return (
       <div className={styles.App}>
-        <Searchbar onSubmit={this.onSubmitSearchQuery} />
+        <Searchbar onSubmitSearchQuery={this.onSubmitSearchQuery} />
         <main>
           <ImageGallery searchQuery={searchQuery} openModal={this.openModal} />
           {showModal && (
