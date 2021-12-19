@@ -1,42 +1,40 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import { ToastContainer } from 'react-toastify';
 import Searchbar from './components/Searchbar';
 import ImageGallery from './components/ImageGallery';
 import Modal from './components/Modal';
 import styles from './App.module.css';
 
-class App extends Component {
-  state = { searchQuery: '', showModal: false, largeImageURL: '', tags: '' };
+const App = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [largeImageURL, setLargeImageURL] = useState('');
+  const [tags, setTags] = useState('');
 
-  onSubmitSearchQuery = searchQuery => {
-    this.setState({ searchQuery });
+  const onSubmitSearchQuery = searchQuery => {
+    setSearchQuery(searchQuery);
   };
 
-  openModal = (largeImageURL, tags) => {
-    this.toggleModal();
-    this.setState({ largeImageURL, tags });
+  const openModal = (largeImageURL, tags) => {
+    toggleModal();
+    setLargeImageURL(largeImageURL);
+    setTags(tags);
   };
 
-  toggleModal = () => {
-    this.setState(({ showModal }) => ({ showModal: !showModal }));
+  const toggleModal = () => {
+    setShowModal(prevState => !prevState);
   };
 
-  render() {
-    const { searchQuery, showModal, largeImageURL, tags } = this.state;
-
-    return (
-      <div className={styles.App}>
-        <Searchbar onSubmitSearchQuery={this.onSubmitSearchQuery} />
-        <main>
-          <ImageGallery searchQuery={searchQuery} openModal={this.openModal} />
-          {showModal && (
-            <Modal closeModal={this.toggleModal} largeImageURL={largeImageURL} tags={tags} />
-          )}
-          <ToastContainer autoClose={3000} />
-        </main>
-      </div>
-    );
-  }
-}
+  return (
+    <div className={styles.App}>
+      <Searchbar onSubmitSearchQuery={onSubmitSearchQuery} />
+      <main>
+        <ImageGallery searchQuery={searchQuery} openModal={openModal} />
+        {showModal && <Modal closeModal={toggleModal} largeImageURL={largeImageURL} tags={tags} />}
+        <ToastContainer autoClose={3000} />
+      </main>
+    </div>
+  );
+};
 
 export default App;
