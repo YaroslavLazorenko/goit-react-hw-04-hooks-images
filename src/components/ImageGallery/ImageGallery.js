@@ -76,10 +76,6 @@ export default function ImageGallery({ searchQuery, openModal }) {
     }
   }, [fetchPictures, isLoadMorePicturesRequested, isSearchQueryEmpty]);
 
-  const loadMorePictures = () => {
-    setIsLoadMorePicturesRequested(true);
-  };
-
   const showMessage = message => {
     toast(message, { toastId: 'ImageGallery-toast' });
   };
@@ -123,7 +119,13 @@ export default function ImageGallery({ searchQuery, openModal }) {
 
       {!hasImagesArrayMaxNumberOfItems.current &&
         status === Status.RESOLVED &&
-        !picturesApiService.reachMaxPage() && <Button loadMorePictures={loadMorePictures} />}
+        !picturesApiService.reachMaxPage() && (
+          <Button
+            loadMorePictures={() => {
+              setIsLoadMorePicturesRequested(true);
+            }}
+          />
+        )}
     </>
   );
 }
