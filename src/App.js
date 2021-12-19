@@ -5,7 +5,7 @@ import ImageGallery from './components/ImageGallery';
 import Modal from './components/Modal';
 import styles from './App.module.css';
 
-const App = () => {
+export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [largeImageURL, setLargeImageURL] = useState('');
@@ -35,6 +35,4 @@ const App = () => {
       </main>
     </div>
   );
-};
-
-export default App;
+}
