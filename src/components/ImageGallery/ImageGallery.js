@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import PicturesApiService from '../../services/pixabay-api';
 import Loader from 'react-loader-spinner';
 import { toast } from 'react-toastify';
@@ -23,23 +23,13 @@ export default function ImageGallery({ searchQuery, openModal }) {
   const [imagesArray, setImagesArray] = useState([]);
   const [error, setError] = useState(null);
   const [isLoadMorePicturesRequested, setIsLoadMorePicturesRequested] = useState(false);
+
+  const isSearchQueryEmpty = searchQuery === '';
+  const isItemsInImagesArray = imagesArray.length !== 0;
+
   const hasImagesArrayMaxNumberOfItems = useRef(false);
-  // const [hasImagesArrayMaxNumberOfItems, setHasImagesArrayMaxNumberOfItems] = useState(false);
 
-  useEffect(() => {
-    if (!searchQuery) return;
-
-    setStatus(Status.PENDING);
-    if (isLoadMorePicturesRequested) {
-      picturesApiService.incPage();
-      setIsLoadMorePicturesRequested(false);
-    } else {
-      console.log('else');
-      setImagesArray([]);
-      picturesApiService.query = searchQuery;
-      picturesApiService.resetPage();
-    }
-
+  const fetchPictures = useCallback(() => {
     picturesApiService
       .fetchPictures()
       .then(result =>
@@ -58,59 +48,33 @@ export default function ImageGallery({ searchQuery, openModal }) {
 
         setImagesArray(prevState => [...prevState, ...imagesArray]);
         setStatus(Status.RESOLVED);
-        // setHasImagesArrayMaxNumberOfItems(hasImagesArrayMaxNumberOfItems);
       })
       .catch(error => {
         setError(error);
         setStatus(Status.REJECTED);
       });
-  }, [isLoadMorePicturesRequested, searchQuery]);
-  // componentDidUpdate(prevProps) {
-  //   const { searchQuery } = this.props;*********
-  //   const { isLoadMorePicturesRequested } = this.state;*************
+  }, []);
 
-  //   const isNewSearchQuery = prevProps.searchQuery !== searchQuery;**********
+  useEffect(() => {
+    if (isSearchQueryEmpty) return;
 
-  //   if (isNewSearchQuery || isLoadMorePicturesRequested) {
-  //     this.setState({ status: Status.PENDING });
-  //     if (isLoadMorePicturesRequested) {
-  //       this.setState({ isLoadMorePicturesRequested: false });
-  //       this.picturesApiService.incPage();
-  //     } else {
-  //       this.setState({ imagesArray: [] });
-  //       this.picturesApiService.query = searchQuery;
-  //       this.picturesApiService.resetPage();
-  //     }*******************
+    picturesApiService.query = searchQuery;
+    picturesApiService.resetPage();
+    setImagesArray([]);
+    setStatus(Status.PENDING);
+    fetchPictures();
+    window.scroll(0, 0);
+  }, [fetchPictures, isSearchQueryEmpty, searchQuery]);
 
-  //     this.picturesApiService
-  //       .fetchPictures()
-  //       .then(result =>
-  //         result.hits.map(({ webformatURL, largeImageURL, tags }) => {
-  //           return { webformatURL, largeImageURL, tags };
-  //         }),
-  //       )
-  //       .then(imagesArray => {
-  //         const hasImagesArrayMaxNumberOfItems =
-  //           imagesArray.length < MAX_NUMBER_OF_ITEMS_IN_IMAGES_ARRAY;
-  //         const isItemsInImagesArray = imagesArray.length !== 0;
-
-  //         if (isNewSearchQuery && !isItemsInImagesArray) {
-  //           this.showMessage(
-  //             'There are no results on your search query. Please, enter another request.',
-  //           );
-  //         }
-
-  //         this.setState(prevState => {
-  //           return {
-  //             imagesArray: [...prevState.imagesArray, ...imagesArray],
-  //             status: Status.RESOLVED,
-  //             hasImagesArrayMaxNumberOfItems,
-  //           };
-  //         });
-  //       })
-  //       .catch(error => this.setState({ error, status: Status.REJECTED }));
-  //   }
-  // }
+  useEffect(() => {
+    if (isSearchQueryEmpty) return;
+    if (isLoadMorePicturesRequested) {
+      picturesApiService.incPage();
+      setIsLoadMorePicturesRequested(false);
+      setStatus(Status.PENDING);
+      fetchPictures();
+    }
+  }, [fetchPictures, isLoadMorePicturesRequested, isSearchQueryEmpty]);
 
   const loadMorePictures = () => {
     setIsLoadMorePicturesRequested(true);
@@ -119,8 +83,6 @@ export default function ImageGallery({ searchQuery, openModal }) {
   const showMessage = message => {
     toast(message, { toastId: 'ImageGallery-toast' });
   };
-
-  const isItemsInImagesArray = imagesArray.length !== 0;
 
   if (status === Status.IDLE) {
     return (
