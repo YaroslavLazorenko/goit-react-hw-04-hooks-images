@@ -24,10 +24,10 @@ export default function ImageGallery({ searchQuery, openModal }) {
   const [error, setError] = useState(null);
   const [isLoadMorePicturesRequested, setIsLoadMorePicturesRequested] = useState(false);
 
-  const isSearchQueryEmpty = searchQuery === '';
-  const isItemsInImagesArray = imagesArray.length !== 0;
+  const areItemsInImagesArray = imagesArray.length !== 0;
 
   const hasImagesArrayMaxNumberOfItems = useRef(false);
+  const isFirstRender = useRef(true);
 
   const fetchPictures = useCallback(() => {
     picturesApiService
@@ -46,7 +46,7 @@ export default function ImageGallery({ searchQuery, openModal }) {
           showMessage('There are no results on your search query. Please, enter another request.');
         }
 
-        setImagesArray(prevState => [...prevState, ...imagesArray]);
+        setImagesArray(prevImagesArray => [...prevImagesArray, ...imagesArray]);
         setStatus(Status.RESOLVED);
       })
       .catch(error => {
@@ -56,7 +56,10 @@ export default function ImageGallery({ searchQuery, openModal }) {
   }, []);
 
   useEffect(() => {
-    if (isSearchQueryEmpty) return;
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
 
     picturesApiService.query = searchQuery;
     picturesApiService.resetPage();
@@ -64,21 +67,30 @@ export default function ImageGallery({ searchQuery, openModal }) {
     setStatus(Status.PENDING);
     fetchPictures();
     window.scroll(0, 0);
-  }, [fetchPictures, isSearchQueryEmpty, searchQuery]);
+  }, [searchQuery, fetchPictures]);
 
   useEffect(() => {
-    if (isSearchQueryEmpty) return;
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
     if (isLoadMorePicturesRequested) {
       picturesApiService.incPage();
       setIsLoadMorePicturesRequested(false);
       setStatus(Status.PENDING);
       fetchPictures();
     }
-  }, [fetchPictures, isLoadMorePicturesRequested, isSearchQueryEmpty]);
+  }, [isLoadMorePicturesRequested, fetchPictures]);
 
   const showMessage = message => {
     toast(message, { toastId: 'ImageGallery-toast' });
   };
+
+  const shouldButtonBeVisible =
+    !hasImagesArrayMaxNumberOfItems.current &&
+    status === Status.RESOLVED &&
+    !picturesApiService.reachMaxPage();
 
   if (status === Status.IDLE) {
     return (
@@ -93,41 +105,40 @@ export default function ImageGallery({ searchQuery, openModal }) {
     return <p className={styles['ImageGallery-text']}>Error fetching data</p>;
   }
 
-  return (
-    <>
-      {isItemsInImagesArray && (
-        <ul className={styles.ImageGallery}>
-          {imagesArray.map(({ webformatURL, largeImageURL, tags }, index) => {
-            return (
-              <ImageGalleryItem
-                key={index}
-                galleryImageURL={webformatURL}
-                largeImageURL={largeImageURL}
-                tags={tags}
-                openModal={openModal}
-              />
-            );
-          })}
-        </ul>
-      )}
+  if (status === Status.RESOLVED || status === Status.PENDING)
+    return (
+      <>
+        {areItemsInImagesArray && (
+          <ul className={styles.ImageGallery}>
+            {imagesArray.map(({ webformatURL, largeImageURL, tags }, index) => {
+              return (
+                <ImageGalleryItem
+                  key={index}
+                  galleryImageURL={webformatURL}
+                  largeImageURL={largeImageURL}
+                  tags={tags}
+                  openModal={openModal}
+                />
+              );
+            })}
+          </ul>
+        )}
 
-      {status === Status.PENDING && (
-        <div className={styles['Loader-container']}>
-          <Loader type="Puff" color="#00BFFF" height={300} width={300} />
-        </div>
-      )}
+        {status === Status.PENDING && (
+          <div className={styles['Loader-container']}>
+            <Loader type="Puff" color="#00BFFF" height={300} width={300} />
+          </div>
+        )}
 
-      {!hasImagesArrayMaxNumberOfItems.current &&
-        status === Status.RESOLVED &&
-        !picturesApiService.reachMaxPage() && (
+        {shouldButtonBeVisible && (
           <Button
             loadMorePictures={() => {
               setIsLoadMorePicturesRequested(true);
             }}
           />
         )}
-    </>
-  );
+      </>
+    );
 }
 
 ImageGallery.propTypes = {

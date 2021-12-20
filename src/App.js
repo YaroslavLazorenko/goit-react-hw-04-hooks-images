@@ -22,7 +22,7 @@ export default function App() {
   };
 
   const toggleModal = () => {
-    setShowModal(prevState => !prevState);
+    setShowModal(prevShowModal => !prevShowModal);
   };
 
   return (
