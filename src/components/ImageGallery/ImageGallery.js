@@ -39,7 +39,7 @@ export default function ImageGallery({ searchQuery, openModal }) {
       )
       .then(imagesArray => {
         hasImagesArrayMaxNumberOfItems.current =
-          imagesArray.length < MAX_NUMBER_OF_ITEMS_IN_IMAGES_ARRAY;
+          imagesArray.length === MAX_NUMBER_OF_ITEMS_IN_IMAGES_ARRAY;
         const isItemsInImagesArray = imagesArray.length !== 0;
 
         if (!isItemsInImagesArray) {
@@ -88,8 +88,8 @@ export default function ImageGallery({ searchQuery, openModal }) {
   };
 
   const shouldButtonBeVisible =
-    !hasImagesArrayMaxNumberOfItems.current &&
     status === Status.RESOLVED &&
+    hasImagesArrayMaxNumberOfItems.current &&
     !picturesApiService.reachMaxPage();
 
   if (status === Status.IDLE) {
